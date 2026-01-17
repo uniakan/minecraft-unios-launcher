@@ -1,32 +1,31 @@
-# UniOS Minecraft Launcher
+# Unios Minecraft Launcher
 
-React + Electron 기반 커스텀 마인크래프트 런처
+지인들과 함께 플레이하기 위한 커스텀 마인크래프트 런처
 
-## 🎮 주요 기능
+## 주요 기능
 
-- **계정 관리**: Microsoft OAuth 로그인, 오프라인 모드 지원
-- **게임 실행**: Java 경로 자동 탐색, JVM 옵션 설정
-- **버전 관리**: Minecraft 버전 선택 및 설치
-- **모드 관리**: 모드팩 설치 및 개별 모드 토글
-- **설정**: 메모리, 해상도, JVM 인자 커스터마이징
+- **Microsoft 로그인**: Device Code Flow를 통한 안전한 인증
+- **오프라인 모드**: Microsoft 계정 없이도 플레이 가능
+- **버전 관리**: Minecraft 버전 설치/삭제/선택
+- **모드 관리**: 설치된 모드 확인 및 활성화/비활성화 토글
+- **셰이더 관리**: shaderpacks 폴더의 셰이더 관리
+- **서버 상태**: mc.uniakan.com 서버 실시간 상태 확인
+- **설정**: Java 경로, 메모리 할당, 해상도, JVM 인자 설정
 
-## 🛠️ 기술 스택
+## 기술 스택
 
 ### Frontend
-
 - **React 18** + **TypeScript**
 - **TailwindCSS** - 스타일링
 - **Zustand** - 상태 관리
 - **React Router** - 라우팅
 
 ### Desktop
-
-- **Electron** - 데스크톱 앱 쉘
-- **IPC** - Renderer ↔ Main 통신
+- **Electron** - 데스크톱 앱
+- **IPC** - Renderer ↔ Main 프로세스 통신
 
 ### 아키텍처
-
-- **FSD (Feature-Sliced Design)** 아키텍처 적용
+- **FSD (Feature-Sliced Design)**
 
 ```
 src/
@@ -38,14 +37,13 @@ src/
 └── shared/           # 공통 유틸, UI 컴포넌트
 ```
 
-## 🚀 시작하기
+## 시작하기
 
 ### 사전 요구사항
-
 - Node.js 18+
-- npm 또는 yarn
+- npm
 
-### 설치
+### 설치 및 실행
 
 ```bash
 # 의존성 설치
@@ -63,19 +61,17 @@ npm run electron:build
 | 명령어                   | 설명                           |
 | ------------------------ | ------------------------------ |
 | `npm run dev`            | Vite 개발 서버 실행            |
-| `npm run electron`       | Electron 앱 실행               |
 | `npm run electron:dev`   | 개발 서버 + Electron 동시 실행 |
 | `npm run build`          | React 앱 빌드                  |
 | `npm run electron:build` | 프로덕션 빌드 (설치 파일 생성) |
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 unios-minecraft-launcher/
 ├── electron/                 # Electron 메인 프로세스
 │   ├── main.ts              # 메인 진입점
-│   ├── preload.ts           # 프리로드 스크립트
-│   └── tsconfig.json        # Electron TS 설정
+│   └── preload.ts           # 프리로드 스크립트
 ├── src/
 │   ├── app/                 # 앱 레이어
 │   ├── pages/               # 페이지 컴포넌트
@@ -83,7 +79,7 @@ unios-minecraft-launcher/
 │   │   ├── login/          # 로그인 화면
 │   │   ├── settings/       # 설정 화면
 │   │   ├── versions/       # 버전 관리
-│   │   └── mods/           # 모드 관리
+│   │   └── mods/           # 모드/셰이더 관리
 │   ├── widgets/             # 위젯
 │   │   ├── sidebar/        # 사이드바
 │   │   └── title-bar/      # 타이틀바
@@ -94,51 +90,20 @@ unios-minecraft-launcher/
 │   └── shared/              # 공유 리소스
 │       ├── ui/             # UI 컴포넌트
 │       ├── lib/            # 유틸리티
+│       ├── i18n/           # 다국어 (한국어/영어)
 │       └── styles/         # 스타일
-├── public/                   # 정적 파일
-├── index.html               # HTML 진입점
-├── vite.config.ts           # Vite 설정
-├── tailwind.config.js       # Tailwind 설정
-├── tsconfig.json            # TypeScript 설정
-└── package.json             # 프로젝트 설정
+└── public/                   # 정적 파일
 ```
 
-## 🔧 개발 가이드
+## 사용 방법
 
-### 새 페이지 추가
+1. **로그인**: Microsoft 계정으로 로그인하거나 오프라인 모드 선택
+2. **버전 설치**: 버전 페이지에서 원하는 Minecraft 버전 설치
+3. **설정**: Java 경로와 메모리 설정 확인
+4. **모드/셰이더**: 모드 페이지에서 파일 관리
+5. **게임 시작**: 홈 화면에서 "게임 시작" 클릭
 
-1. `src/pages/[page-name]/` 디렉토리 생성
-2. 페이지 컴포넌트 작성
-3. `src/app/providers/router.tsx`에 라우트 추가
+## 제작자
 
-### 새 기능 추가
-
-1. `src/features/[feature-name]/` 디렉토리 생성
-2. `model/store.ts` - Zustand 스토어
-3. `ui/` - 기능 관련 UI 컴포넌트
-4. `index.ts` - public API export
-
-### IPC 통신
-
-```typescript
-// Renderer에서 Main 호출
-const result = await window.electronAPI.game.launch(options);
-
-// Main에서 Renderer로 이벤트 전송
-mainWindow.webContents.send("game:log", { type: "stdout", data: "..." });
-
-// Renderer에서 이벤트 수신
-window.electronAPI.game.onLog((data) => console.log(data));
-```
-
-## 📄 라이선스
-
-MIT License
-
-## 🤝 기여하기
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+**Hardy**
+Email: hardyjumpit@gmail.com
