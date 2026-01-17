@@ -72,7 +72,7 @@ export function LoginPage() {
     let hash = 0
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
+      hash = (hash << 5) - hash + char
       hash = hash & hash
     }
     // 간단한 UUID 형식 생성 (실제로는 MD5 기반이지만, 여기선 간단한 해시 사용)
@@ -114,15 +114,39 @@ export function LoginPage() {
                   {/* Device Code 표시 */}
                   {deviceCode && (
                     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-700 mb-2">
-                        브라우저에서 아래 코드를 입력하세요:
-                      </p>
-                      <p className="text-2xl font-mono font-bold text-blue-900 tracking-wider">
-                        {deviceCode.userCode}
-                      </p>
-                      <p className="text-xs text-blue-600 mt-2">
-                        인증 완료 후 자동으로 로그인됩니다...
-                      </p>
+                      <p className="text-sm text-blue-700 mb-2">브라우저에서 아래 코드를 입력하세요:</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-2xl font-mono font-bold text-blue-900 tracking-wider">
+                          {deviceCode.userCode}
+                        </p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(deviceCode.userCode)
+                          }}
+                          className="p-1.5 rounded-md hover:bg-blue-200/50 transition-colors text-blue-600 hover:text-blue-800"
+                          title="코드 복사"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-2">인증 완료 후 자동으로 로그인됩니다...</p>
+                      {/* 로그인 취소 버튼 */}
+                      <button
+                        onClick={() => {
+                          setIsLoading(false)
+                          setDeviceCode(null)
+                        }}
+                        className="mt-3 w-full py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        로그인 취소
+                      </button>
                     </div>
                   )}
 
@@ -203,7 +227,23 @@ export function LoginPage() {
             </CardContent>
 
             <div className="p-4 border-t border-white/50 bg-white/30 text-center">
-              <p className="text-[10px] text-forest-400" dangerouslySetInnerHTML={{ __html: t('login.terms') }} />
+              <p className="text-[10px] text-forest-400">
+                {t('login.termsPrefix')}
+                <span
+                  onClick={() => navigate('/terms')}
+                  className="font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300 mx-1"
+                >
+                  {t('login.termsLink')}
+                </span>
+                {t('login.termsAnd')}
+                <span
+                  onClick={() => navigate('/privacy')}
+                  className="font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300 mx-1"
+                >
+                  {t('login.privacyLink')}
+                </span>
+                {t('login.termsSuffix')}
+              </p>
             </div>
           </Card>
         </div>

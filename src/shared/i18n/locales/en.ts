@@ -183,7 +183,91 @@ export const en = {
       start: 'Start Offline',
       back: 'Back',
     },
-    terms:
-      "By logging in, you agree to our <span class='font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300'>Terms of Service</span> and <span class='font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300'>Privacy Policy</span>.",
+    termsPrefix: 'By logging in, you agree to our',
+    termsLink: 'Terms of Service',
+    termsAnd: 'and',
+    privacyLink: 'Privacy Policy',
+    termsSuffix: '.',
+  },
+  terms: {
+    title: 'Terms of Service',
+    back: 'Go Back',
+    lastUpdated: 'Last Updated',
+    understood: 'I Understand',
+    section1: {
+      title: 'Article 1 (Purpose)',
+      content:
+        'These Terms govern the conditions and procedures for using the services provided by Unios Minecraft Launcher (hereinafter "Launcher"), as well as the rights, obligations, and responsibilities of users and the Launcher.',
+    },
+    section2: {
+      title: 'Article 2 (Definitions)',
+      content:
+        '"Service" refers to the functions provided through the Launcher, including Minecraft game execution, version management, and mod management. "User" refers to any person who uses the services provided by the Launcher in accordance with these Terms.',
+    },
+    section3: {
+      title: 'Article 3 (Effectiveness and Modification of Terms)',
+      content:
+        'These Terms become effective when posted online through the Launcher. The Launcher may modify the Terms when reasonable grounds arise, and modified Terms will be announced through notices.',
+    },
+    section4: {
+      title: 'Article 4 (Provision of Services)',
+      content:
+        'The Launcher supports downloading, installing, and running Minecraft games. It supports authentication through Microsoft account integration and also provides offline mode. However, the copyright of the Minecraft game itself belongs to Mojang Studios and Microsoft.',
+    },
+    section5: {
+      title: 'Article 5 (User Obligations)',
+      content:
+        "Users must not use the Launcher for illegal purposes. Unauthorized copying, distribution, or modification of the Launcher source code is prohibited. Actions that interfere with other users' normal use of the service are prohibited.",
+    },
+    section6: {
+      title: 'Article 6 (Limitation of Liability)',
+      content:
+        "The Launcher is provided as free software, and we are not responsible for any damages arising from the use of the service. Issues related to the Minecraft game follow Mojang Studios' policies.",
+    },
+    section7: {
+      title: 'Article 7 (Miscellaneous)',
+      content:
+        'Matters not specified in these Terms shall be governed by relevant laws and commercial practices. For inquiries regarding Launcher usage, please contact us through official channels.',
+    },
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    back: 'Go Back',
+    lastUpdated: 'Last Updated',
+    understood: 'I Understand',
+    section1: {
+      title: 'Article 1 (Collection of Personal Information)',
+      content:
+        'Unios Minecraft Launcher collects only minimal personal information necessary for service provision. When logging in with Microsoft, we collect account information (username, UUID) provided by Microsoft.',
+    },
+    section2: {
+      title: 'Article 2 (Types of Personal Information Collected)',
+      content:
+        '• Microsoft account username\n• Minecraft UUID\n• Access token (stored locally, encrypted)\n\nWhen using offline mode, only the entered username is stored locally.',
+    },
+    section3: {
+      title: 'Article 3 (Purpose of Using Personal Information)',
+      content:
+        'Collected personal information is used only for the following purposes:\n• Minecraft game execution and authentication\n• Multiplayer server connection\n• User identification and game settings storage',
+    },
+    section4: {
+      title: 'Article 4 (Storage of Personal Information)',
+      content:
+        "All personal information is stored only on the user's local computer and is not transmitted to external servers. The Launcher does not operate separate servers and does not collect or store user data.",
+    },
+    section5: {
+      title: 'Article 5 (Disclosure to Third Parties)',
+      content:
+        'The Launcher does not provide collected personal information to third parties. However, when connecting to Minecraft game servers, your username and UUID may be transmitted to the server operator.',
+    },
+    section6: {
+      title: 'Article 6 (Destruction of Personal Information)',
+      content:
+        'When the Launcher is deleted, all personal information stored locally is also deleted. Users can delete stored account information at any time through the settings menu.',
+    },
+    section7: {
+      title: 'Article 7 (Contact)',
+      content: 'For inquiries regarding personal information processing, please contact us through official channels.',
+    },
   },
 }

@@ -183,7 +183,91 @@ export const ko = {
       start: '오프라인으로 시작',
       back: '뒤로 가기',
     },
-    terms:
-      "로그인하면 <span class='font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300'>서비스 이용약관</span> 및 <span class='font-semibold cursor-pointer hover:text-fairy-600 underline decoration-fairy-300'>개인정보처리방침</span>에 동의하게 됩니다.",
+    termsPrefix: '로그인하면',
+    termsLink: '서비스 이용약관',
+    termsAnd: '및',
+    privacyLink: '개인정보처리방침',
+    termsSuffix: '에 동의하게 됩니다.',
+  },
+  terms: {
+    title: '서비스 이용약관',
+    back: '돌아가기',
+    lastUpdated: '최종 수정일',
+    understood: '확인했습니다',
+    section1: {
+      title: '제1조 (목적)',
+      content:
+        '이 약관은 Unios Minecraft Launcher(이하 "런처")가 제공하는 서비스의 이용조건 및 절차, 이용자와 런처의 권리, 의무, 책임사항과 기타 필요한 사항을 규정함을 목적으로 합니다.',
+    },
+    section2: {
+      title: '제2조 (정의)',
+      content:
+        '본 약관에서 사용하는 용어의 정의는 다음과 같습니다. "서비스"란 런처를 통해 제공되는 마인크래프트 게임 실행, 버전 관리, 모드 관리 등의 기능을 의미합니다. "이용자"란 이 약관에 따라 런처가 제공하는 서비스를 받는 자를 말합니다.',
+    },
+    section3: {
+      title: '제3조 (약관의 효력과 변경)',
+      content:
+        '이 약관은 런처를 통해 온라인으로 공시함으로써 효력이 발생합니다. 런처는 합리적인 사유가 발생할 경우 약관을 변경할 수 있으며, 변경된 약관은 공지사항을 통해 공지됩니다.',
+    },
+    section4: {
+      title: '제4조 (서비스의 제공)',
+      content:
+        '런처는 마인크래프트 게임의 다운로드, 설치, 실행을 지원합니다. Microsoft 계정 연동을 통한 정품 인증을 지원하며, 오프라인 모드도 제공합니다. 단, 마인크래프트 게임 자체의 저작권은 Mojang Studios와 Microsoft에 있습니다.',
+    },
+    section5: {
+      title: '제5조 (이용자의 의무)',
+      content:
+        '이용자는 런처를 불법적인 목적으로 사용해서는 안 됩니다. 런처의 소스코드를 무단으로 복제, 배포, 수정하는 행위를 금지합니다. 다른 이용자의 정상적인 서비스 이용을 방해하는 행위를 금지합니다.',
+    },
+    section6: {
+      title: '제6조 (책임의 제한)',
+      content:
+        '런처는 무료로 제공되는 소프트웨어이며, 서비스 이용으로 발생하는 어떠한 손해에 대해서도 책임을 지지 않습니다. 마인크래프트 게임 관련 문제는 Mojang Studios의 정책을 따릅니다.',
+    },
+    section7: {
+      title: '제7조 (기타)',
+      content:
+        '본 약관에 명시되지 않은 사항은 관련 법령 및 상관례에 따릅니다. 런처 사용에 관한 문의사항은 공식 채널을 통해 문의해 주시기 바랍니다.',
+    },
+  },
+  privacy: {
+    title: '개인정보처리방침',
+    back: '돌아가기',
+    lastUpdated: '최종 수정일',
+    understood: '확인했습니다',
+    section1: {
+      title: '제1조 (개인정보의 수집)',
+      content:
+        'Unios Minecraft Launcher는 서비스 제공을 위해 최소한의 개인정보만을 수집합니다. Microsoft 로그인 시 Microsoft에서 제공하는 계정 정보(사용자 이름, UUID)를 수집합니다.',
+    },
+    section2: {
+      title: '제2조 (수집하는 개인정보 항목)',
+      content:
+        '• Microsoft 계정 사용자 이름\n• Minecraft UUID\n• 액세스 토큰 (로컬 저장, 암호화)\n\n오프라인 모드 사용 시에는 입력한 사용자 이름만 로컬에 저장됩니다.',
+    },
+    section3: {
+      title: '제3조 (개인정보의 이용 목적)',
+      content:
+        '수집된 개인정보는 다음 목적으로만 사용됩니다:\n• 마인크래프트 게임 실행 및 인증\n• 멀티플레이어 서버 접속\n• 사용자 식별 및 게임 설정 저장',
+    },
+    section4: {
+      title: '제4조 (개인정보의 보관)',
+      content:
+        '모든 개인정보는 사용자의 로컬 컴퓨터에만 저장되며, 외부 서버로 전송되지 않습니다. 런처는 별도의 서버를 운영하지 않으며, 사용자 데이터를 수집하거나 저장하지 않습니다.',
+    },
+    section5: {
+      title: '제5조 (제3자 제공)',
+      content:
+        '런처는 수집한 개인정보를 제3자에게 제공하지 않습니다. 단, 마인크래프트 게임 서버 접속 시 해당 서버 운영자에게 사용자 이름과 UUID가 전달될 수 있습니다.',
+    },
+    section6: {
+      title: '제6조 (개인정보의 파기)',
+      content:
+        '런처를 삭제하면 로컬에 저장된 모든 개인정보가 함께 삭제됩니다. 사용자는 언제든지 설정 메뉴를 통해 저장된 계정 정보를 삭제할 수 있습니다.',
+    },
+    section7: {
+      title: '제7조 (문의)',
+      content: '개인정보 처리에 관한 문의사항은 공식 채널을 통해 문의해 주시기 바랍니다.',
+    },
   },
 }
