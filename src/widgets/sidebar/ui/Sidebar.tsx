@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@shared/lib'
 import { useAuthStore } from '@features/auth'
@@ -9,6 +10,22 @@ export function Sidebar() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
   const { t } = useTranslation()
+  const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null)
+
+  const fetchServerStatus = useCallback(async () => {
+    try {
+      const status = await window.electronAPI?.server.ping()
+      setServerStatus(status)
+    } catch (error) {
+      setServerStatus(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchServerStatus()
+    const interval = setInterval(fetchServerStatus, 30000)
+    return () => clearInterval(interval)
+  }, [fetchServerStatus])
 
   const navItems = [
     { path: '/home', label: t('sidebar.home'), icon: HomeIcon },
@@ -69,10 +86,23 @@ export function Sidebar() {
       <div className="p-4 mt-auto space-y-4">
         <div className="px-4 py-3 rounded-xl bg-fairy-50/50 border border-fairy-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-green" />
-            <span className="text-xs font-medium text-forest-600">{t('sidebar.serverStatus')}</span>
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full',
+                serverStatus?.online
+                  ? 'bg-green-500 animate-pulse shadow-green'
+                  : 'bg-red-500'
+              )}
+            />
+            <span className="text-xs font-medium text-forest-600">
+              {serverStatus?.online ? t('sidebar.serverStatus') : '서버 오프라인'}
+            </span>
           </div>
-          <span className="text-xs font-bold text-fairy-600">{t('sidebar.playing', { count: 128 })}</span>
+          <span className="text-xs font-bold text-fairy-600">
+            {serverStatus?.online
+              ? t('sidebar.playing', { count: serverStatus.players?.online ?? 0 })
+              : '-'}
+          </span>
         </div>
 
         <button

@@ -125,6 +125,29 @@ interface ElectronAPI {
     onDeviceCode: (callback: (data: { userCode: string; verificationUri: string }) => void) => void;
     removeDeviceCodeListener: () => void;
   };
+  server: {
+    ping: (host?: string, port?: number) => Promise<ServerStatus>;
+    getDefault: () => Promise<{ host: string; port: number }>;
+  };
+}
+
+interface ServerStatus {
+  online: boolean;
+  host: string;
+  port: number;
+  version?: {
+    name: string;
+    protocol: number;
+  };
+  players?: {
+    online: number;
+    max: number;
+    sample?: { name: string; id: string }[];
+  };
+  description?: string;
+  favicon?: string;
+  ping?: number;
+  error?: string;
 }
 
 declare global {

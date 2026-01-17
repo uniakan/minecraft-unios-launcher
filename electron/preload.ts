@@ -104,6 +104,12 @@ const electronAPI = {
       ipcRenderer.removeAllListeners('auth:deviceCode')
     },
   },
+
+  // 서버 상태
+  server: {
+    ping: (host?: string, port?: number) => ipcRenderer.invoke('server:ping', host, port),
+    getDefault: () => ipcRenderer.invoke('server:getDefault'),
+  },
 }
 
 // 렌더러 프로세스에 API 노출

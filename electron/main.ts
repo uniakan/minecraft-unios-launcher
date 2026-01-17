@@ -1121,3 +1121,248 @@ ipcMain.handle(
     }
   }
 );
+
+// =====================
+// Minecraft 서버 상태 조회 (Server List Ping)
+// =====================
+
+import * as net from "net";
+import * as dns from "dns";
+
+const DEFAULT_SERVER = {
+  host: "mc.uniakan.com",
+  port: 25565,
+};
+
+interface ServerStatus {
+  online: boolean;
+  host: string;
+  port: number;
+  version?: {
+    name: string;
+    protocol: number;
+  };
+  players?: {
+    online: number;
+    max: number;
+    sample?: { name: string; id: string }[];
+  };
+  description?: string;
+  favicon?: string;
+  ping?: number;
+  error?: string;
+}
+
+// SRV 레코드 조회 (mc.example.com -> 실제 서버 주소)
+async function resolveSRV(host: string): Promise<{ host: string; port: number }> {
+  return new Promise((resolve) => {
+    dns.resolveSrv(`_minecraft._tcp.${host}`, (err, addresses) => {
+      if (err || !addresses || addresses.length === 0) {
+        resolve({ host, port: DEFAULT_SERVER.port });
+      } else {
+        resolve({ host: addresses[0].name, port: addresses[0].port });
+      }
+    });
+  });
+}
+
+// VarInt 인코딩
+function writeVarInt(value: number): Buffer {
+  const bytes: number[] = [];
+  while (true) {
+    if ((value & ~0x7f) === 0) {
+      bytes.push(value);
+      break;
+    }
+    bytes.push((value & 0x7f) | 0x80);
+    value >>>= 7;
+  }
+  return Buffer.from(bytes);
+}
+
+// VarInt 디코딩
+function readVarInt(buffer: Buffer, offset: number): { value: number; size: number } {
+  let value = 0;
+  let size = 0;
+  let byte: number;
+
+  do {
+    byte = buffer[offset + size];
+    value |= (byte & 0x7f) << (7 * size);
+    size++;
+    if (size > 5) throw new Error("VarInt too big");
+  } while ((byte & 0x80) !== 0);
+
+  return { value, size };
+}
+
+// Minecraft Server List Ping
+async function pingMinecraftServer(
+  host: string = DEFAULT_SERVER.host,
+  port: number = DEFAULT_SERVER.port,
+  timeout: number = 5000
+): Promise<ServerStatus> {
+  // SRV 레코드 확인
+  const resolved = await resolveSRV(host);
+  const actualHost = resolved.host;
+  const actualPort = resolved.port;
+
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+    const socket = new net.Socket();
+    let responseData = Buffer.alloc(0);
+    let resolved_ = false;
+
+    const cleanup = () => {
+      if (!resolved_) {
+        resolved_ = true;
+        socket.destroy();
+      }
+    };
+
+    socket.setTimeout(timeout);
+
+    socket.on("timeout", () => {
+      cleanup();
+      resolve({
+        online: false,
+        host,
+        port,
+        error: "Connection timeout",
+      });
+    });
+
+    socket.on("error", (err) => {
+      cleanup();
+      resolve({
+        online: false,
+        host,
+        port,
+        error: err.message,
+      });
+    });
+
+    socket.on("connect", () => {
+      // Handshake 패킷 생성
+      const hostBuffer = Buffer.from(actualHost, "utf8");
+      const hostLengthVarInt = writeVarInt(hostBuffer.length);
+
+      const handshakeData = Buffer.concat([
+        writeVarInt(0x00), // Packet ID (Handshake)
+        writeVarInt(767), // Protocol version (1.21.1)
+        hostLengthVarInt,
+        hostBuffer,
+        Buffer.from([actualPort >> 8, actualPort & 0xff]), // Port (Big Endian)
+        writeVarInt(1), // Next state (1 = Status)
+      ]);
+
+      const handshakePacket = Buffer.concat([
+        writeVarInt(handshakeData.length),
+        handshakeData,
+      ]);
+
+      // Status Request 패킷
+      const statusRequest = Buffer.concat([
+        writeVarInt(1), // Packet length
+        writeVarInt(0x00), // Packet ID (Status Request)
+      ]);
+
+      socket.write(Buffer.concat([handshakePacket, statusRequest]));
+    });
+
+    socket.on("data", (data) => {
+      responseData = Buffer.concat([responseData, data]);
+
+      try {
+        // 패킷 길이 읽기
+        const { value: packetLength, size: lengthSize } = readVarInt(responseData, 0);
+
+        if (responseData.length < lengthSize + packetLength) {
+          return; // 더 많은 데이터 필요
+        }
+
+        // Packet ID 읽기
+        const { value: packetId, size: idSize } = readVarInt(
+          responseData,
+          lengthSize
+        );
+
+        if (packetId !== 0x00) {
+          cleanup();
+          resolve({
+            online: false,
+            host,
+            port,
+            error: "Invalid packet ID",
+          });
+          return;
+        }
+
+        // JSON 길이 읽기
+        const { value: jsonLength, size: jsonLengthSize } = readVarInt(
+          responseData,
+          lengthSize + idSize
+        );
+
+        // JSON 데이터 읽기
+        const jsonStart = lengthSize + idSize + jsonLengthSize;
+        const jsonData = responseData.slice(jsonStart, jsonStart + jsonLength).toString("utf8");
+        const status = JSON.parse(jsonData);
+
+        const pingTime = Date.now() - startTime;
+
+        cleanup();
+
+        // description 파싱 (문자열 또는 객체일 수 있음)
+        let description = "";
+        if (typeof status.description === "string") {
+          description = status.description;
+        } else if (status.description?.text) {
+          description = status.description.text;
+        } else if (status.description?.extra) {
+          description = status.description.extra
+            .map((e: any) => e.text || "")
+            .join("");
+        }
+
+        resolve({
+          online: true,
+          host,
+          port,
+          version: status.version,
+          players: status.players,
+          description,
+          favicon: status.favicon,
+          ping: pingTime,
+        });
+      } catch (e) {
+        // 아직 전체 패킷을 받지 못함
+      }
+    });
+
+    socket.connect(actualPort, actualHost);
+  });
+}
+
+// IPC 핸들러
+ipcMain.handle("server:ping", async (_, host?: string, port?: number) => {
+  try {
+    const status = await pingMinecraftServer(
+      host || DEFAULT_SERVER.host,
+      port || DEFAULT_SERVER.port
+    );
+    return status;
+  } catch (error) {
+    return {
+      online: false,
+      host: host || DEFAULT_SERVER.host,
+      port: port || DEFAULT_SERVER.port,
+      error: (error as Error).message,
+    };
+  }
+});
+
+// 기본 서버 정보 가져오기
+ipcMain.handle("server:getDefault", () => {
+  return DEFAULT_SERVER;
+});
