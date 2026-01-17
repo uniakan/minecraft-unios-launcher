@@ -1,0 +1,77 @@
+{
+  "name": "unios-minecraft-launcher",
+  "version": "1.0.0",
+  "description": "커스텀 마인크래프트 런처 - React + Electron",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:compile": "esbuild electron/main.ts electron/preload.ts --platform=node --outdir=dist-electron --format=cjs --bundle --external:electron",
+    "electron": "npm run electron:compile && wait-on tcp:5175 && electron .",
+    "electron:dev": "npm run electron:compile && concurrently \"npm run dev\" \"wait-on tcp:5175 && electron .\"",
+    "electron:build": "npm run build && npm run electron:compile && electron-builder"
+  },
+  "keywords": [
+    "minecraft",
+    "launcher",
+    "electron",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "esbuild": "^0.27.2",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.0",
+    "zustand": "^4.4.7"
+  },
+  "build": {
+    "appId": "com.unios.minecraft-launcher",
+    "productName": "Unios Minecraft Launcher",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "public/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "public/icon.png"
+    }
+  }
+}
