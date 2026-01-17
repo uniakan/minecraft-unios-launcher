@@ -1,57 +1,46 @@
-import { useState, useEffect } from "react";
-import { cn } from "@shared/lib";
-import { useTranslation } from "@shared/i18n";
+import { useState, useEffect } from 'react'
+import { cn } from '@shared/lib'
+import { useTranslation } from '@shared/i18n'
 
 export function TitleBar() {
-  const { language, setLanguage } = useTranslation();
-  const [platform, setPlatform] = useState<string>("");
-  const [isMaximized, setIsMaximized] = useState(false);
+  const { language, setLanguage } = useTranslation()
+  const [platform, setPlatform] = useState<string>('')
+  const [isMaximized, setIsMaximized] = useState(false)
 
   useEffect(() => {
-    window.electronAPI?.app.getPlatform().then(setPlatform);
-  }, []);
+    window.electronAPI?.app.getPlatform().then(setPlatform)
+  }, [])
 
   const handleMinimize = () => {
-    window.electronAPI?.window.minimize();
-  };
+    window.electronAPI?.window.minimize()
+  }
 
   const handleMaximize = () => {
-    window.electronAPI?.window.maximize();
-    setIsMaximized(!isMaximized);
-  };
+    window.electronAPI?.window.maximize()
+    setIsMaximized(!isMaximized)
+  }
 
   const handleClose = () => {
-    window.electronAPI?.window.close();
-  };
+    window.electronAPI?.window.close()
+  }
 
   return (
     <div className="h-12 flex items-center justify-between px-5 bg-white/60 backdrop-blur-md border-b border-white/40 select-none drag-region z-50">
       {/* 로고 & 타이틀 */}
       <div className="flex items-center gap-3">
-        <img
-          src="/icon.png"
-          alt="UniOS Launcher"
-          className="w-6 h-6 drop-shadow-sm select-none"
-        />
-        <span className="text-base font-bold text-forest-800 tracking-wide font-sans">
-          Unios Minecraft
-        </span>
+        <img src="./icon.png" alt="UniOS Launcher" className="w-6 h-6 drop-shadow-sm select-none" />
+        <span className="text-base font-bold text-forest-800 tracking-wide font-sans">Unios Minecraft</span>
       </div>
 
       {/* 우측 컨트롤 영역 */}
       <div className="flex items-center gap-4 no-drag">
         {/* 언어 변경 버튼 (지구본 아이콘) */}
         <button
-          onClick={() => setLanguage(language === "ko" ? "en" : "ko")}
+          onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
           className="p-1.5 rounded-lg text-forest-500 hover:text-forest-800 hover:bg-forest-50/50 transition-all active:scale-95 mr-1 focus:outline-none"
-          title={language === "ko" ? "Switch to English" : "한국어로 변경"}
+          title={language === 'ko' ? 'Switch to English' : '한국어로 변경'}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -74,12 +63,7 @@ export function TitleBar() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M20 12H4"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
             </svg>
           </button>
           <button
@@ -93,12 +77,7 @@ export function TitleBar() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M12 4v16m8-8H4"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
             </svg>
           </button>
           <button
@@ -112,16 +91,11 @@ export function TitleBar() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
