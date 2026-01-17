@@ -110,6 +110,18 @@ const electronAPI = {
     ping: (host?: string, port?: number) => ipcRenderer.invoke('server:ping', host, port),
     getDefault: () => ipcRenderer.invoke('server:getDefault'),
   },
+
+  // 모드 관리
+  mods: {
+    scan: (gameDir: string) => ipcRenderer.invoke('mods:scan', gameDir),
+    toggle: (gameDir: string, filename: string) => ipcRenderer.invoke('mods:toggle', gameDir, filename),
+  },
+
+  // 셰이더 관리
+  shaders: {
+    scan: (gameDir: string) => ipcRenderer.invoke('shaders:scan', gameDir),
+    toggle: (gameDir: string, filename: string) => ipcRenderer.invoke('shaders:toggle', gameDir, filename),
+  },
 }
 
 // 렌더러 프로세스에 API 노출

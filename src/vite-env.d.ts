@@ -129,6 +129,14 @@ interface ElectronAPI {
     ping: (host?: string, port?: number) => Promise<ServerStatus>;
     getDefault: () => Promise<{ host: string; port: number }>;
   };
+  mods: {
+    scan: (gameDir: string) => Promise<{ success: boolean; mods?: ModInfo[]; error?: string }>;
+    toggle: (gameDir: string, filename: string) => Promise<{ success: boolean; newFilename?: string; error?: string }>;
+  };
+  shaders: {
+    scan: (gameDir: string) => Promise<{ success: boolean; shaders?: ShaderInfo[]; error?: string }>;
+    toggle: (gameDir: string, filename: string) => Promise<{ success: boolean; newFilename?: string; error?: string }>;
+  };
 }
 
 interface ServerStatus {
@@ -148,6 +156,20 @@ interface ServerStatus {
   favicon?: string;
   ping?: number;
   error?: string;
+}
+
+interface ModInfo {
+  filename: string;
+  name: string;
+  enabled: boolean;
+  size: string;
+}
+
+interface ShaderInfo {
+  filename: string;
+  name: string;
+  enabled: boolean;
+  size: string;
 }
 
 declare global {

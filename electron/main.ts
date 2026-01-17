@@ -1366,3 +1366,189 @@ ipcMain.handle("server:ping", async (_, host?: string, port?: number) => {
 ipcMain.handle("server:getDefault", () => {
   return DEFAULT_SERVER;
 });
+
+// =====================
+// 모드 관리
+// =====================
+
+interface ModInfo {
+  filename: string;
+  name: string;
+  enabled: boolean;
+  size: string;
+}
+
+// 모드 폴더 스캔
+ipcMain.handle("mods:scan", async (_, gameDir: string): Promise<{ success: boolean; mods?: ModInfo[]; error?: string }> => {
+  try {
+    const modsPath = path.join(gameDir, "mods");
+
+    // mods 폴더 존재 확인
+    if (!fs.existsSync(modsPath)) {
+      return { success: true, mods: [] };
+    }
+
+    const files = fs.readdirSync(modsPath);
+    const mods: ModInfo[] = [];
+
+    for (const file of files) {
+      // .jar 또는 .jar.disabled 파일만 처리
+      if (file.endsWith(".jar") || file.endsWith(".jar.disabled")) {
+        const filePath = path.join(modsPath, file);
+        const stats = fs.statSync(filePath);
+        const enabled = file.endsWith(".jar");
+
+        // 파일 이름에서 모드 이름 추출 (버전 번호 제거 시도)
+        let name = file.replace(/\.jar(\.disabled)?$/, "");
+        // 일반적인 모드 파일명 패턴: modname-1.20.1-1.0.0.jar
+        const nameMatch = name.match(/^(.+?)[-_](?:\d|mc|forge|fabric)/i);
+        if (nameMatch) {
+          name = nameMatch[1];
+        }
+
+        // 파일 크기 포맷
+        const sizeInMB = stats.size / (1024 * 1024);
+        const size = sizeInMB >= 1
+          ? `${sizeInMB.toFixed(1)} MB`
+          : `${(stats.size / 1024).toFixed(0)} KB`;
+
+        mods.push({
+          filename: file,
+          name,
+          enabled,
+          size,
+        });
+      }
+    }
+
+    // 이름 순 정렬
+    mods.sort((a, b) => a.name.localeCompare(b.name));
+
+    return { success: true, mods };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// 모드 활성화/비활성화 토글
+ipcMain.handle("mods:toggle", async (_, gameDir: string, filename: string): Promise<{ success: boolean; newFilename?: string; error?: string }> => {
+  try {
+    const modsPath = path.join(gameDir, "mods");
+    const currentPath = path.join(modsPath, filename);
+
+    if (!fs.existsSync(currentPath)) {
+      return { success: false, error: "파일을 찾을 수 없습니다." };
+    }
+
+    let newFilename: string;
+    if (filename.endsWith(".jar.disabled")) {
+      // 활성화: .jar.disabled -> .jar
+      newFilename = filename.replace(/\.disabled$/, "");
+    } else if (filename.endsWith(".jar")) {
+      // 비활성화: .jar -> .jar.disabled
+      newFilename = filename + ".disabled";
+    } else {
+      return { success: false, error: "잘못된 파일 형식입니다." };
+    }
+
+    const newPath = path.join(modsPath, newFilename);
+    fs.renameSync(currentPath, newPath);
+
+    return { success: true, newFilename };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// =====================
+// 셰이더 관리
+// =====================
+
+interface ShaderInfo {
+  filename: string;
+  name: string;
+  enabled: boolean;
+  size: string;
+}
+
+// 셰이더 폴더 스캔
+ipcMain.handle("shaders:scan", async (_, gameDir: string): Promise<{ success: boolean; shaders?: ShaderInfo[]; error?: string }> => {
+  try {
+    const shadersPath = path.join(gameDir, "shaderpacks");
+
+    // shaderpacks 폴더 존재 확인
+    if (!fs.existsSync(shadersPath)) {
+      return { success: true, shaders: [] };
+    }
+
+    const files = fs.readdirSync(shadersPath);
+    const shaders: ShaderInfo[] = [];
+
+    for (const file of files) {
+      // .zip 또는 .zip.disabled 파일만 처리
+      if (file.endsWith(".zip") || file.endsWith(".zip.disabled")) {
+        const filePath = path.join(shadersPath, file);
+        const stats = fs.statSync(filePath);
+        const enabled = file.endsWith(".zip");
+
+        // 파일 이름에서 셰이더 이름 추출 (버전 번호 제거 시도)
+        let name = file.replace(/\.zip(\.disabled)?$/, "");
+        // 일반적인 셰이더 파일명 패턴: ShaderName-v1.0.zip
+        const nameMatch = name.match(/^(.+?)[-_](?:v?\d|mc)/i);
+        if (nameMatch) {
+          name = nameMatch[1];
+        }
+
+        // 파일 크기 포맷
+        const sizeInMB = stats.size / (1024 * 1024);
+        const size = sizeInMB >= 1
+          ? `${sizeInMB.toFixed(1)} MB`
+          : `${(stats.size / 1024).toFixed(0)} KB`;
+
+        shaders.push({
+          filename: file,
+          name,
+          enabled,
+          size,
+        });
+      }
+    }
+
+    // 이름 순 정렬
+    shaders.sort((a, b) => a.name.localeCompare(b.name));
+
+    return { success: true, shaders };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// 셰이더 활성화/비활성화 토글
+ipcMain.handle("shaders:toggle", async (_, gameDir: string, filename: string): Promise<{ success: boolean; newFilename?: string; error?: string }> => {
+  try {
+    const shadersPath = path.join(gameDir, "shaderpacks");
+    const currentPath = path.join(shadersPath, filename);
+
+    if (!fs.existsSync(currentPath)) {
+      return { success: false, error: "파일을 찾을 수 없습니다." };
+    }
+
+    let newFilename: string;
+    if (filename.endsWith(".zip.disabled")) {
+      // 활성화: .zip.disabled -> .zip
+      newFilename = filename.replace(/\.disabled$/, "");
+    } else if (filename.endsWith(".zip")) {
+      // 비활성화: .zip -> .zip.disabled
+      newFilename = filename + ".disabled";
+    } else {
+      return { success: false, error: "잘못된 파일 형식입니다." };
+    }
+
+    const newPath = path.join(shadersPath, newFilename);
+    fs.renameSync(currentPath, newPath);
+
+    return { success: true, newFilename };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
