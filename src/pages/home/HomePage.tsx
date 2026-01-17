@@ -330,7 +330,7 @@ export function HomePage() {
                           ? 'bg-fairy-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
                           : status === 'error'
                           ? 'bg-red-500'
-                          : 'bg-gray-400'
+                          : 'bg-blue-500'
                       }`}
                     ></span>
                   </div>

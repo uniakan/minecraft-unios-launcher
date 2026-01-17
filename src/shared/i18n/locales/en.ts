@@ -65,7 +65,7 @@ export const en = {
     players: 'Players',
     version: 'Version',
     ping: 'Ping',
-    moreInfo: 'Server Details',
+    refresh: 'Refresh',
   },
   mods: {
     title: 'Mod Management',

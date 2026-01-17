@@ -65,7 +65,7 @@ export const ko = {
     players: '현재 플레이어',
     version: '서버 버전',
     ping: '핑 (Ping)',
-    moreInfo: '서버 정보 더보기',
+    refresh: '새로고침',
   },
   mods: {
     title: '모드 관리',
