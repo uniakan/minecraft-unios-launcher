@@ -24,6 +24,12 @@ interface InstallProgress {
   progress: number;
 }
 
+interface NeoForgeVersion {
+  version: string;
+  mcVersion: string;
+  fullVersion: string;
+}
+
 interface ElectronAPI {
   window: {
     minimize: () => Promise<void>;
@@ -65,9 +71,47 @@ interface ElectronAPI {
       versionId: string;
       gameDir: string;
     }) => Promise<{ success: boolean; error?: string }>;
+    deleteVersion: (options: {
+      versionId: string;
+      gameDir: string;
+    }) => Promise<{ success: boolean; error?: string }>;
     onInstallProgress: (callback: (data: InstallProgress) => void) => void;
     onInstallError: (callback: (data: { error: string }) => void) => void;
     removeInstallListeners: () => void;
+  };
+  neoforge: {
+    getVersions: (mcVersion?: string) => Promise<{
+      success: boolean;
+      data?: NeoForgeVersion[];
+      error?: string;
+    }>;
+    getLatestVersion: (mcVersion?: string) => Promise<{
+      success: boolean;
+      data?: NeoForgeVersion;
+      error?: string;
+    }>;
+    install: (options: {
+      neoforgeVersion: NeoForgeVersion;
+      gameDir: string;
+    }) => Promise<{ success: boolean; versionId?: string; error?: string }>;
+    launch: (options: {
+      javaPath: string;
+      gameDir: string;
+      versionId: string;
+      username: string;
+      uuid: string;
+      accessToken: string;
+      memoryMin: number;
+      memoryMax: number;
+      resolution?: { width: number; height: number; fullscreen?: boolean };
+    }) => Promise<{ success: boolean; pid?: number; error?: string }>;
+    getInstalledVersions: (
+      gameDir: string
+    ) => Promise<{ success: boolean; data?: string[]; error?: string }>;
+    deleteVersion: (options: {
+      versionId: string;
+      gameDir: string;
+    }) => Promise<{ success: boolean; error?: string }>;
   };
   game: {
     launch: (options: {
@@ -90,6 +134,7 @@ interface ElectronAPI {
   };
   shell: {
     openExternal: (url: string) => Promise<void>;
+    openPath: (path: string) => Promise<string>;
   };
   app: {
     getVersion: () => Promise<string>;

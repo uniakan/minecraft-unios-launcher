@@ -122,6 +122,28 @@ const electronAPI = {
     scan: (gameDir: string) => ipcRenderer.invoke('shaders:scan', gameDir),
     toggle: (gameDir: string, filename: string) => ipcRenderer.invoke('shaders:toggle', gameDir, filename),
   },
+
+  // NeoForge 관리
+  neoforge: {
+    getVersions: (mcVersion?: string) => ipcRenderer.invoke('neoforge:getVersions', mcVersion),
+    getLatestVersion: (mcVersion?: string) => ipcRenderer.invoke('neoforge:getLatestVersion', mcVersion),
+    install: (options: { neoforgeVersion: { version: string; mcVersion: string; fullVersion: string }; gameDir: string }) =>
+      ipcRenderer.invoke('neoforge:install', options),
+    launch: (options: {
+      javaPath: string
+      gameDir: string
+      versionId: string
+      username: string
+      uuid: string
+      accessToken: string
+      memoryMin: number
+      memoryMax: number
+      resolution?: { width: number; height: number; fullscreen?: boolean }
+    }) => ipcRenderer.invoke('neoforge:launch', options),
+    getInstalledVersions: (gameDir: string) => ipcRenderer.invoke('neoforge:getInstalledVersions', gameDir),
+    deleteVersion: (options: { versionId: string; gameDir: string }) =>
+      ipcRenderer.invoke('neoforge:deleteVersion', options),
+  },
 }
 
 // 렌더러 프로세스에 API 노출

@@ -21,6 +21,14 @@ import {
   VersionDetails,
   VersionInfo,
 } from "./minecraft-core";
+import {
+  getNeoForgeVersions,
+  getLatestNeoForgeVersion,
+  downloadNeoForgeVersion,
+  buildNeoForgeClasspath,
+  mergeVersionDetails,
+  NeoForgeVersion,
+} from "./neoforge-core";
 import * as zlib from "zlib";
 
 let mainWindow: BrowserWindow | null = null;
@@ -1552,3 +1560,409 @@ ipcMain.handle("shaders:toggle", async (_, gameDir: string, filename: string): P
     return { success: false, error: (error as Error).message };
   }
 });
+
+// =====================
+// NeoForge 관리
+// =====================
+
+// NeoForge 버전 목록 가져오기
+ipcMain.handle("neoforge:getVersions", async (_, mcVersion: string = "1.21.1") => {
+  try {
+    const versions = await getNeoForgeVersions(mcVersion);
+    return { success: true, data: versions };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// 최신 NeoForge 버전 가져오기
+ipcMain.handle("neoforge:getLatestVersion", async (_, mcVersion: string = "1.21.1") => {
+  try {
+    const version = await getLatestNeoForgeVersion(mcVersion);
+    return { success: true, data: version };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// NeoForge 설치
+ipcMain.handle(
+  "neoforge:install",
+  async (
+    event,
+    options: {
+      neoforgeVersion: NeoForgeVersion;
+      gameDir: string;
+    }
+  ) => {
+    const { neoforgeVersion, gameDir } = options;
+
+    try {
+      // First, ensure vanilla Minecraft is installed
+      const vanillaVersion = neoforgeVersion.mcVersion;
+      const vanillaJsonPath = path.join(gameDir, "versions", vanillaVersion, `${vanillaVersion}.json`);
+
+      if (!fs.existsSync(vanillaJsonPath)) {
+        sendProgress("install:progress", {
+          stage: "vanilla",
+          message: `바닐라 ${vanillaVersion} 설치 중...`,
+          progress: 0,
+        });
+
+        // Get vanilla version manifest
+        if (!versionManifestCache) {
+          versionManifestCache = await getVersionManifest();
+        }
+
+        const versionInfo = versionManifestCache.versions.find(v => v.id === vanillaVersion);
+        if (!versionInfo) {
+          throw new Error(`바닐라 버전 ${vanillaVersion}을 찾을 수 없습니다.`);
+        }
+
+        // Install vanilla version first
+        const versionDetails = await getVersionDetails(versionInfo);
+        const versionDir = path.join(gameDir, "versions", vanillaVersion);
+        await fs.promises.mkdir(versionDir, { recursive: true });
+
+        // Save vanilla version JSON
+        await fs.promises.writeFile(
+          path.join(versionDir, `${vanillaVersion}.json`),
+          JSON.stringify(versionDetails, null, 2)
+        );
+
+        // Download client JAR
+        const clientJarPath = path.join(versionDir, `${vanillaVersion}.jar`);
+        if (!fs.existsSync(clientJarPath)) {
+          await downloadFile(
+            versionDetails.downloads.client.url,
+            clientJarPath,
+            (p) => {
+              sendProgress("install:progress", {
+                stage: "vanilla",
+                message: `바닐라 클라이언트 다운로드 중... ${p.percentage}%`,
+                progress: p.percentage * 0.15,
+              });
+            }
+          );
+        }
+
+        // Download vanilla libraries
+        const librariesDir = path.join(gameDir, "libraries");
+        const totalLibraries = versionDetails.libraries.filter(l => shouldIncludeLibrary(l)).length;
+        let downloadedLibraries = 0;
+
+        for (const library of versionDetails.libraries) {
+          if (!shouldIncludeLibrary(library)) continue;
+
+          if (library.downloads?.artifact) {
+            const libPath = path.join(librariesDir, library.downloads.artifact.path);
+            if (!fs.existsSync(libPath)) {
+              await downloadFile(library.downloads.artifact.url, libPath);
+            }
+          }
+
+          // Native libraries
+          if (library.natives && library.downloads?.classifiers) {
+            const osKey = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "osx" : "linux";
+            const nativeClassifier = library.natives[osKey];
+
+            if (nativeClassifier && library.downloads.classifiers[nativeClassifier]) {
+              const nativeArtifact = library.downloads.classifiers[nativeClassifier];
+              const nativePath = path.join(librariesDir, nativeArtifact.path);
+              if (!fs.existsSync(nativePath)) {
+                await downloadFile(nativeArtifact.url, nativePath);
+              }
+            }
+          }
+
+          downloadedLibraries++;
+          sendProgress("install:progress", {
+            stage: "vanilla",
+            message: `바닐라 라이브러리 다운로드 중: ${downloadedLibraries}/${totalLibraries}`,
+            progress: 15 + (downloadedLibraries / totalLibraries) * 15,
+          });
+        }
+
+        // Download assets
+        sendProgress("install:progress", {
+          stage: "vanilla",
+          message: "에셋 다운로드 중...",
+          progress: 30,
+        });
+
+        const assetsDir = path.join(gameDir, "assets");
+        const assetIndexDir = path.join(assetsDir, "indexes");
+        await fs.promises.mkdir(assetIndexDir, { recursive: true });
+
+        const assetIndexPath = path.join(assetIndexDir, `${versionDetails.assetIndex.id}.json`);
+        if (!fs.existsSync(assetIndexPath)) {
+          await downloadFile(versionDetails.assetIndex.url, assetIndexPath);
+        }
+
+        const assetIndex = JSON.parse(await fs.promises.readFile(assetIndexPath, "utf-8"));
+        const assetObjects = Object.entries(assetIndex.objects) as [string, { hash: string; size: number }][];
+        const objectsDir = path.join(assetsDir, "objects");
+
+        let downloadedAssets = 0;
+        for (const [, asset] of assetObjects) {
+          const hash = asset.hash;
+          const hashPrefix = hash.substring(0, 2);
+          const assetPath = path.join(objectsDir, hashPrefix, hash);
+
+          if (!fs.existsSync(assetPath)) {
+            const assetUrl = `https://resources.download.minecraft.net/${hashPrefix}/${hash}`;
+            await downloadFile(assetUrl, assetPath);
+          }
+
+          downloadedAssets++;
+          if (downloadedAssets % 100 === 0 || downloadedAssets === assetObjects.length) {
+            sendProgress("install:progress", {
+              stage: "vanilla",
+              message: `에셋 다운로드 중: ${downloadedAssets}/${assetObjects.length}`,
+              progress: 30 + (downloadedAssets / assetObjects.length) * 20,
+            });
+          }
+        }
+      }
+
+      // Now install NeoForge
+      sendProgress("install:progress", {
+        stage: "neoforge",
+        message: "NeoForge 설치 시작...",
+        progress: 50,
+      });
+
+      const result = await downloadNeoForgeVersion(neoforgeVersion, gameDir, (stage, message, progress) => {
+        sendProgress("install:progress", {
+          stage: "neoforge",
+          message,
+          progress: 50 + progress * 0.5,
+        });
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "NeoForge 설치 실패");
+      }
+
+      sendProgress("install:progress", {
+        stage: "done",
+        message: "NeoForge 설치 완료!",
+        progress: 100,
+      });
+
+      return { success: true, versionId: result.versionId };
+    } catch (error) {
+      sendProgress("install:error", { error: (error as Error).message });
+      return { success: false, error: (error as Error).message };
+    }
+  }
+);
+
+// NeoForge 게임 실행
+ipcMain.handle(
+  "neoforge:launch",
+  async (
+    event,
+    options: {
+      javaPath: string;
+      gameDir: string;
+      versionId: string;
+      username: string;
+      uuid: string;
+      accessToken: string;
+      memoryMin: number;
+      memoryMax: number;
+      resolution?: { width: number; height: number; fullscreen?: boolean };
+    }
+  ) => {
+    const {
+      javaPath,
+      gameDir,
+      versionId,
+      username,
+      uuid,
+      accessToken,
+      memoryMin,
+      memoryMax,
+      resolution,
+    } = options;
+
+    try {
+      // Read NeoForge version JSON
+      const neoforgeJsonPath = path.join(gameDir, "versions", versionId, `${versionId}.json`);
+      if (!fs.existsSync(neoforgeJsonPath)) {
+        return { success: false, error: `NeoForge 버전 ${versionId}이 설치되어 있지 않습니다.` };
+      }
+
+      const neoforgeDetails: VersionDetails = JSON.parse(
+        await fs.promises.readFile(neoforgeJsonPath, "utf-8")
+      );
+
+      // Get vanilla version from inheritsFrom
+      const vanillaVersion = (neoforgeDetails as any).inheritsFrom;
+      if (!vanillaVersion) {
+        return { success: false, error: "바닐라 버전 정보를 찾을 수 없습니다." };
+      }
+
+      // Read vanilla version JSON
+      const vanillaJsonPath = path.join(gameDir, "versions", vanillaVersion, `${vanillaVersion}.json`);
+      if (!fs.existsSync(vanillaJsonPath)) {
+        return { success: false, error: `바닐라 버전 ${vanillaVersion}이 설치되어 있지 않습니다.` };
+      }
+
+      const vanillaDetails: VersionDetails = JSON.parse(
+        await fs.promises.readFile(vanillaJsonPath, "utf-8")
+      );
+
+      // Merge version details
+      const mergedDetails = mergeVersionDetails(neoforgeDetails, vanillaDetails);
+
+      // Extract natives
+      const nativesDir = path.join(gameDir, "versions", versionId, "natives");
+      await fs.promises.mkdir(nativesDir, { recursive: true });
+
+      const librariesDir = path.join(gameDir, "libraries");
+      for (const library of vanillaDetails.libraries) {
+        if (!shouldIncludeLibrary(library)) continue;
+        if (!library.natives) continue;
+
+        const osKey = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "osx" : "linux";
+        const nativeClassifier = library.natives[osKey];
+        if (!nativeClassifier) continue;
+
+        if (library.downloads?.classifiers?.[nativeClassifier]) {
+          const nativeArtifact = library.downloads.classifiers[nativeClassifier];
+          const nativeJarPath = path.join(librariesDir, nativeArtifact.path);
+
+          if (fs.existsSync(nativeJarPath)) {
+            await extractNatives(nativeJarPath, nativesDir, library.extract?.exclude || []);
+          }
+        }
+      }
+
+      // Build classpath
+      const classpath = buildNeoForgeClasspath(neoforgeDetails, vanillaDetails, gameDir, versionId);
+
+      if (classpath.length === 0) {
+        return { success: false, error: "라이브러리를 찾을 수 없습니다. NeoForge를 다시 설치해주세요." };
+      }
+
+      // Build JVM args
+      const jvmArgs = buildJvmArgs(
+        mergedDetails,
+        gameDir,
+        versionId,
+        nativesDir,
+        classpath,
+        memoryMin,
+        memoryMax
+      );
+
+      // Build game args
+      const assetsDir = path.join(gameDir, "assets");
+      const gameArgs = buildGameArgs(
+        mergedDetails,
+        gameDir,
+        versionId,
+        assetsDir,
+        username,
+        uuid,
+        accessToken,
+        resolution
+      );
+
+      // Main class
+      const mainClass = mergedDetails.mainClass;
+
+      // Full args
+      const allArgs = [...jvmArgs, mainClass, ...gameArgs];
+
+      console.log("Launching NeoForge with args:", javaPath, allArgs.join(" "));
+
+      // Start game process
+      gameProcess = spawn(javaPath, allArgs, {
+        cwd: gameDir,
+        detached: false,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+
+      gameProcess.stdout?.on("data", (data) => {
+        const lines = data.toString().split("\n");
+        for (const line of lines) {
+          if (line.trim()) {
+            mainWindow?.webContents.send("game:log", { type: "stdout", data: line });
+          }
+        }
+      });
+
+      gameProcess.stderr?.on("data", (data) => {
+        const lines = data.toString().split("\n");
+        for (const line of lines) {
+          if (line.trim()) {
+            mainWindow?.webContents.send("game:log", { type: "stderr", data: line });
+          }
+        }
+      });
+
+      gameProcess.on("close", (code) => {
+        mainWindow?.webContents.send("game:exit", { code });
+        gameProcess = null;
+      });
+
+      gameProcess.on("error", (error) => {
+        mainWindow?.webContents.send("game:error", { error: error.message });
+        gameProcess = null;
+      });
+
+      return { success: true, pid: gameProcess.pid };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+);
+
+// 설치된 NeoForge 버전 목록
+ipcMain.handle("neoforge:getInstalledVersions", async (_, gameDir: string) => {
+  try {
+    const versionsDir = path.join(gameDir, "versions");
+    if (!fs.existsSync(versionsDir)) {
+      return { success: true, data: [] };
+    }
+
+    const entries = await fs.promises.readdir(versionsDir, { withFileTypes: true });
+    const installed: string[] = [];
+
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.startsWith("neoforge-")) {
+        const versionJson = path.join(versionsDir, entry.name, `${entry.name}.json`);
+        if (fs.existsSync(versionJson)) {
+          installed.push(entry.name);
+        }
+      }
+    }
+
+    return { success: true, data: installed };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// NeoForge 버전 삭제
+ipcMain.handle(
+  "neoforge:deleteVersion",
+  async (_, options: { versionId: string; gameDir: string }) => {
+    const { versionId, gameDir } = options;
+    const versionDir = path.join(gameDir, "versions", versionId);
+
+    try {
+      if (fs.existsSync(versionDir)) {
+        await fs.promises.rm(versionDir, { recursive: true, force: true });
+        return { success: true };
+      } else {
+        return { success: false, error: "버전 폴더가 존재하지 않습니다." };
+      }
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+);
