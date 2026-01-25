@@ -504,7 +504,14 @@ export function VersionsPage() {
                         <CardContent className="p-5">
                           <div className="flex items-start justify-between mb-4">
                             <div>
-                              <h3 className="text-xl font-bold text-forest-800 tracking-tight">NeoForge {version.version}</h3>
+                              <h3 className="text-xl font-bold text-forest-800 tracking-tight flex items-center gap-2 flex-wrap">
+                                <span>NeoForge {version.version}</span>
+                                {version.version === '21.1.217' && (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-fairy-500 to-fairy-600 text-white shadow-sm whitespace-nowrap">
+                                    추천
+                                  </span>
+                                )}
+                              </h3>
                               <p className="text-xs text-forest-400 font-medium mt-1">Minecraft {version.mcVersion}</p>
                             </div>
                             <span className="px-2.5 py-1 rounded-md text-xs font-bold shadow-sm bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border border-orange-200">

@@ -114,6 +114,18 @@ export function ServerInfo() {
           </span>
         </div>
 
+        <div className="flex items-center justify-between p-3.5 bg-fairy-50/80 rounded-xl border border-fairy-200 hover:bg-fairy-100/50 transition-colors">
+          <span className="text-sm text-fairy-700 font-bold flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            추천 NeoForge
+          </span>
+          <span className="text-sm font-extrabold text-fairy-800 bg-fairy-100 px-2 py-0.5 rounded-lg">
+            21.1.217
+          </span>
+        </div>
+
         <div className="flex items-center justify-between p-3.5 bg-white/50 rounded-xl border border-forest-50 hover:bg-forest-50/50 transition-colors">
           <span className="text-sm text-forest-600 font-bold">
             {t("serverInfo.ping")}

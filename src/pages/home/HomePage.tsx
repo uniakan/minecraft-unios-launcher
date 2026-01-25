@@ -98,7 +98,13 @@ export function HomePage() {
       return
     }
 
-    const installedResult = await window.electronAPI?.minecraft.getInstalledVersions(settings.gameDir)
+    // NeoForge 버전인지 확인
+    const isNeoForge = settings.selectedVersion.startsWith('neoforge-')
+
+    // 설치된 버전 확인 (NeoForge와 바닐라 분리)
+    const installedResult = isNeoForge
+      ? await window.electronAPI?.neoforge.getInstalledVersions(settings.gameDir)
+      : await window.electronAPI?.minecraft.getInstalledVersions(settings.gameDir)
     const installedVersions = installedResult?.success ? installedResult.data || [] : []
 
     if (!installedVersions.includes(settings.selectedVersion)) {
@@ -122,22 +128,40 @@ export function HomePage() {
         message: `메모리: ${settings.memory.min}MB - ${settings.memory.max}MB`,
       })
 
-      const result = await window.electronAPI?.game.launch({
-        javaPath: settings.javaPath,
-        gameDir: settings.gameDir,
-        version: settings.selectedVersion,
-        username: user.username,
-        uuid: user.uuid,
-        accessToken: user.accessToken,
-        memoryMin: settings.memory.min,
-        memoryMax: settings.memory.max,
-        resolution: settings.resolution.fullscreen
-          ? { width: 1920, height: 1080, fullscreen: true }
-          : {
-              width: settings.resolution.width,
-              height: settings.resolution.height,
-            },
-      })
+      // NeoForge 버전이면 neoforge.launch, 아니면 game.launch 사용
+      const result = isNeoForge
+        ? await window.electronAPI?.neoforge.launch({
+            javaPath: settings.javaPath,
+            gameDir: settings.gameDir,
+            versionId: settings.selectedVersion,
+            username: user.username,
+            uuid: user.uuid,
+            accessToken: user.accessToken,
+            memoryMin: settings.memory.min,
+            memoryMax: settings.memory.max,
+            resolution: settings.resolution.fullscreen
+              ? { width: 1920, height: 1080, fullscreen: true }
+              : {
+                  width: settings.resolution.width,
+                  height: settings.resolution.height,
+                },
+          })
+        : await window.electronAPI?.game.launch({
+            javaPath: settings.javaPath,
+            gameDir: settings.gameDir,
+            version: settings.selectedVersion,
+            username: user.username,
+            uuid: user.uuid,
+            accessToken: user.accessToken,
+            memoryMin: settings.memory.min,
+            memoryMax: settings.memory.max,
+            resolution: settings.resolution.fullscreen
+              ? { width: 1920, height: 1080, fullscreen: true }
+              : {
+                  width: settings.resolution.width,
+                  height: settings.resolution.height,
+                },
+          })
 
       if (result?.success) {
         setProgress(100, '게임이 실행되었습니다!')

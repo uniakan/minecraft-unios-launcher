@@ -31,7 +31,7 @@ export function Footer({ className }: { className?: string }) {
 
         {/* Instagram */}
         <button
-          onClick={() => openLink("")} // TODO: Instagram URL 입력
+          onClick={() => openLink("https://www.instagram.com/relax_plz_/")}
           className="hover:text-pink-500 hover:scale-110 transition-all duration-300 p-1"
           title="Instagram"
         >

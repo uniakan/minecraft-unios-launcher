@@ -264,13 +264,14 @@ export async function downloadNeoForgeVersion(
     const entries = zip.getEntries();
     for (const entry of entries) {
       if (entry.entryName.startsWith("maven/") && !entry.isDirectory) {
-        const destPath = path.join(librariesDir, entry.entryName.substring(6)); // Remove "maven/" prefix
+        const relativePath = entry.entryName.substring(6); // Remove "maven/" prefix
+        const destPath = path.join(librariesDir, relativePath);
         const destDir = path.dirname(destPath);
 
-        if (!fs.existsSync(destPath)) {
-          await fs.promises.mkdir(destDir, { recursive: true });
-          zip.extractEntryTo(entry, destDir, false, true);
-        }
+        // 항상 추출 (기존 파일이 손상되었을 수 있음)
+        await fs.promises.mkdir(destDir, { recursive: true });
+        const data = entry.getData();
+        await fs.promises.writeFile(destPath, data);
       }
     }
 

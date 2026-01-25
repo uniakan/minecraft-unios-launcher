@@ -374,7 +374,7 @@ export function buildJvmArgs(
   // Common JVM args
   args.push(`-Djava.library.path=${nativesDir}`);
   args.push("-Dminecraft.launcher.brand=UniOS");
-  args.push("-Dminecraft.launcher.version=1.0.0");
+  args.push("-Dminecraft.launcher.version=1.0.2");
 
   // Process JVM arguments from version JSON (1.13+)
   if (versionDetails.arguments?.jvm) {
@@ -494,7 +494,7 @@ function substituteArg(
   return arg
     .replace("${natives_directory}", nativesDir)
     .replace("${launcher_name}", "UniOS")
-    .replace("${launcher_version}", "1.0.0")
+    .replace("${launcher_version}", "1.0.2")
     .replace(
       "${classpath}",
       classpath.join(process.platform === "win32" ? ";" : ":")
