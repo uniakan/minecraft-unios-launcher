@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as https from "https";
+import AdmZip from "adm-zip";
 import { downloadFile, VersionDetails, Library, shouldIncludeLibrary } from "./minecraft-core";
 
 // NeoForge Maven API
@@ -161,7 +162,6 @@ export async function downloadNeoForgeVersion(
     });
 
     // Extract version.json and install_profile.json from installer JAR
-    const AdmZip = require("adm-zip");
     const zip = new AdmZip(installerPath);
 
     // Read version.json
