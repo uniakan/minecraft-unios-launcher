@@ -1,6 +1,6 @@
 {
   "name": "unios-minecraft-launcher",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "커스텀 마인크래프트 런처 - React + Electron",
   "main": "dist-electron/main.js",
   "scripts": {

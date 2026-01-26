@@ -374,7 +374,7 @@ export function buildJvmArgs(
   // Common JVM args
   args.push(`-Djava.library.path=${nativesDir}`);
   args.push("-Dminecraft.launcher.brand=UniOS");
-  args.push("-Dminecraft.launcher.version=1.0.2");
+  args.push("-Dminecraft.launcher.version=1.0.5");
 
   // Process JVM arguments from version JSON (1.13+)
   if (versionDetails.arguments?.jvm) {
@@ -491,17 +491,37 @@ function substituteArg(
   nativesDir: string,
   classpath: string[]
 ): string {
-  return arg
+  let result = arg
     .replace("${natives_directory}", nativesDir)
     .replace("${launcher_name}", "UniOS")
-    .replace("${launcher_version}", "1.0.2")
+    .replace("${launcher_version}", "1.0.5")
     .replace(
       "${classpath}",
       classpath.join(process.platform === "win32" ? ";" : ":")
     )
-    .replace("${library_directory}", path.join(gameDir, "libraries"))
-    .replace("${classpath_separator}", process.platform === "win32" ? ";" : ":")
+    .replace(/\$\{library_directory\}/g, path.join(gameDir, "libraries"))
+    .replace(/\$\{classpath_separator\}/g, process.platform === "win32" ? ";" : ":")
     .replace("${version_name}", versionId);
+
+  // Windows에서 경로의 forward slash를 backslash로 변환
+  if (process.platform === "win32") {
+    // JVM 모듈 인자는 forward slash를 유지해야 함 (예: java.base/sun.security.util)
+    // 패턴: module/package 형태이고 파일 경로가 아닌 경우
+    const isJvmModuleArg = /^[a-zA-Z0-9._]+\/[a-zA-Z0-9._]+=/.test(result) || // module/package=
+                          /^[a-zA-Z0-9._]+\/[a-zA-Z0-9._]+$/.test(result);    // module/package
+
+    if (!isJvmModuleArg) {
+      // classpath_separator(;)로 분리된 경로들을 각각 정규화
+      if (result.includes(";") && (result.includes("/") || result.includes("\\"))) {
+        result = result.split(";").map(p => p.replace(/\//g, "\\")).join(";");
+      } else if (result.includes("/") && !result.startsWith("-")) {
+        // 단일 경로인 경우 (옵션이 아닌 경우만)
+        result = result.replace(/\//g, "\\");
+      }
+    }
+  }
+
+  return result;
 }
 
 function substituteGameArg(

@@ -139,12 +139,11 @@ export function HomePage() {
             accessToken: user.accessToken,
             memoryMin: settings.memory.min,
             memoryMax: settings.memory.max,
-            resolution: settings.resolution.fullscreen
-              ? { width: 1920, height: 1080, fullscreen: true }
-              : {
-                  width: settings.resolution.width,
-                  height: settings.resolution.height,
-                },
+            resolution: {
+              width: settings.resolution.fullscreen ? 1920 : settings.resolution.width,
+              height: settings.resolution.fullscreen ? 1080 : settings.resolution.height,
+              fullscreen: settings.resolution.fullscreen,
+            },
           })
         : await window.electronAPI?.game.launch({
             javaPath: settings.javaPath,
@@ -155,12 +154,11 @@ export function HomePage() {
             accessToken: user.accessToken,
             memoryMin: settings.memory.min,
             memoryMax: settings.memory.max,
-            resolution: settings.resolution.fullscreen
-              ? { width: 1920, height: 1080, fullscreen: true }
-              : {
-                  width: settings.resolution.width,
-                  height: settings.resolution.height,
-                },
+            resolution: {
+              width: settings.resolution.fullscreen ? 1920 : settings.resolution.width,
+              height: settings.resolution.fullscreen ? 1080 : settings.resolution.height,
+              fullscreen: settings.resolution.fullscreen,
+            },
           })
 
       if (result?.success) {

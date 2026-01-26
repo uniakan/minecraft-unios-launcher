@@ -1848,10 +1848,11 @@ ipcMain.handle(
       }
 
       // Build JVM args
+      // NeoForge의 ${version_name}은 바닐라 버전을 참조해야 함 (ignoreList에서 1.21.1.jar를 무시하기 위해)
       const jvmArgs = buildJvmArgs(
         mergedDetails,
         gameDir,
-        versionId,
+        vanillaVersion,  // NeoForge: 바닐라 버전 사용 (versionId 대신)
         nativesDir,
         classpath,
         memoryMin,
@@ -1876,6 +1877,35 @@ ipcMain.handle(
 
       // Full args
       const allArgs = [...jvmArgs, mainClass, ...gameArgs];
+
+      // Debug: Log JVM args
+      console.log("=== NeoForge Launch Debug ===");
+      console.log("Game Dir:", gameDir);
+      console.log("Libraries Dir:", librariesDir);
+      console.log("JVM Args:", JSON.stringify(jvmArgs, null, 2));
+
+      // Check if securejarhandler exists
+      const securejarPath = path.join(librariesDir, "cpw", "mods", "securejarhandler");
+      console.log("Securejarhandler path:", securejarPath);
+      console.log("Securejarhandler exists:", fs.existsSync(securejarPath));
+      if (fs.existsSync(securejarPath)) {
+        try {
+          const files = fs.readdirSync(securejarPath);
+          console.log("Securejarhandler contents:", files);
+        } catch (e) {
+          console.log("Error reading securejarhandler:", e);
+        }
+      }
+
+      // Send debug info to renderer
+      mainWindow?.webContents.send("game:log", {
+        type: "debug",
+        data: `Libraries Dir: ${librariesDir}`
+      });
+      mainWindow?.webContents.send("game:log", {
+        type: "debug",
+        data: `Securejarhandler exists: ${fs.existsSync(securejarPath)}`
+      });
 
       console.log("Launching NeoForge with args:", javaPath, allArgs.join(" "));
 

@@ -262,18 +262,33 @@ export async function downloadNeoForgeVersion(
     onProgress?.("extract", "클라이언트 데이터 추출 중...", 85);
 
     const entries = zip.getEntries();
-    for (const entry of entries) {
-      if (entry.entryName.startsWith("maven/") && !entry.isDirectory) {
-        const relativePath = entry.entryName.substring(6); // Remove "maven/" prefix
-        const destPath = path.join(librariesDir, relativePath);
-        const destDir = path.dirname(destPath);
+    let extractedCount = 0;
+    const mavenEntries = entries.filter(e => e.entryName.startsWith("maven/") && !e.isDirectory);
+    console.log(`Found ${mavenEntries.length} files in maven/ folder to extract`);
 
+    for (const entry of mavenEntries) {
+      const relativePath = entry.entryName.substring(6); // Remove "maven/" prefix
+      const destPath = path.join(librariesDir, relativePath);
+      const destDir = path.dirname(destPath);
+
+      try {
         // 항상 추출 (기존 파일이 손상되었을 수 있음)
         await fs.promises.mkdir(destDir, { recursive: true });
         const data = entry.getData();
         await fs.promises.writeFile(destPath, data);
+        extractedCount++;
+
+        // Log securejarhandler specifically
+        if (relativePath.includes("securejarhandler")) {
+          console.log(`Extracted securejarhandler: ${destPath}`);
+          console.log(`File size: ${data.length} bytes`);
+        }
+      } catch (extractError) {
+        console.error(`Failed to extract ${relativePath}:`, extractError);
       }
     }
+
+    console.log(`Successfully extracted ${extractedCount}/${mavenEntries.length} files`);
 
     // Clean up installer
     try {
