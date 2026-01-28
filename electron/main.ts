@@ -1138,7 +1138,7 @@ import * as net from "net";
 import * as dns from "dns";
 
 const DEFAULT_SERVER = {
-  host: "mc.uniakan.com",
+  host: "hardy-unios-server.uniakan.com",
   port: 25565,
 };
 

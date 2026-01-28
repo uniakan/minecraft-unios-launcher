@@ -14,7 +14,7 @@ export function ServerInfo() {
     } catch (error) {
       setServerStatus({
         online: false,
-        host: "mc.uniakan.com",
+        host: "hardy-unios-server.uniakan.com",
         port: 25565,
         error: "Failed to fetch server status",
       });
